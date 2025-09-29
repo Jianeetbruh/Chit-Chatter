@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Dashboard</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+body { margin:0; font-family: Arial, sans-serif; background:#f0f2f5; }
+header { padding:15px; background:#4a76a8; color:white; text-align:center; font-size:20px; font-weight:bold; }
+.container { display:flex; height:calc(100vh - 60px); }
+.sidebar { width:200px; background:#fff; border-right:1px solid #ccc; overflow-y:auto; padding:10px; }
+.sidebar h3 { margin-top:0; text-align:center; color:#333; }
+.sidebar .item { padding:8px; border-radius:5px; margin-bottom:5px; cursor:pointer; transition:0.2s; }
+.sidebar .item:hover { background:#e0e0e0; }
+#chat { flex:1; display:flex; flex-direction:column; padding:10px; }
+#messages { flex:1; overflow-y:auto; background:#e5ddd5; padding:10px; border-radius:5px; margin-bottom:10px; }
+#messages div { padding:5px; margin-bottom:5px; border-radius:5px; }
+#messages .me { background:#dcf8c6; text-align:right; }
+#messages .friend { background:#fff; text-align:left; }
+input, button { padding:8px; border-radius:5px; border:1px solid #ccc; margin-right:5px; }
+button { background:#4a76a8; color:white; border:none; cursor:pointer; transition:0.2s; }
+button:hover { background:#3b5f85; }
+.add-section { margin-top:10px; }
+.sidebar .input-section { margin-top:10px; }
+@media(max-width:800px){
+  .container { flex-direction:column; }
+  .sidebar { width:100%; height:auto; border-right:none; display:flex; overflow-x:auto; }
+  .sidebar .item { flex:1; text-align:center; }
+}
+</style>
+</head>
+<body>
+<header>Welcome, <span id="username"></span></header>
+
+<div class="container">
+  <!-- Friend Requests Sidebar -->
+  <div class="sidebar" id="requests"></div>
+
+  <!-- Friends Sidebar -->
+  <div class="sidebar" id="friends">
+    <h3>Friends</h3>
+    <div class="input-section">
+      <input type="text" id="addFriendUsername" placeholder="Friend username">
+      <button onclick="sendFriendRequest()">Send Request</button>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div id="chat">
+    <div id="messages"></div>
+    <div class="add-section">
+      <input type="text" id="message" placeholder="Type message">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Groups Sidebar -->
+  <div class="sidebar" id="groups">
+    <h3>Groups</h3>
+    <div class="input-section">
+      <input type="text" id="groupName" placeholder="Group name">
+      <input type="text" id="groupMembers" placeholder="Members comma separated">
+      <button onclick="createGroup()">Create Group</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const socket = io();
+const user = JSON.parse(localStorage.getItem('user'));
+document.getElementById('username').innerText = user.username;
+socket.emit('join', user.username);
+
+let currentChat = {type:'private', name:null};
+const messagesDiv = document.getElementById('messages');
+
+// --- Render Functions ---
+function renderFriends(){
+    const friendsDiv = document.getElementById('friends');
+    const friendsList = user.friends.map(f=>`<div class="item" onclick="startChat('private','${f}')">${f}</div>`).join('');
+    friendsDiv.innerHTML = '<h3>Friends</h3>'+friendsList + friendsDiv.querySelector('.input-section').outerHTML;
+}
+
+function renderGroups(){
+    const groupsDiv = document.getElementById('groups');
+    const groupsList = user.groups.map(g=>`<div class="item" onclick="startChat('group','${g}')">${g}</div>`).join('');
+    groupsDiv.innerHTML = '<h3>Groups</h3>'+groupsList + groupsDiv.querySelector('.input-section').outerHTML;
+}
+
+function renderRequests(){
+    const requestsDiv = document.getElementById('requests');
+    const reqList = user.friendRequests.map(r=>`<div class="item">${r} <button onclick="acceptRequest('${r}')">Accept</button></div>`).join('');
+    requestsDiv.innerHTML = '<h3>Friend Requests</h3>'+reqList;
+}
+
+// Initial render
+renderFriends(); renderGroups(); renderRequests();
+
+// --- Chat Functions ---
+function startChat(type,name){
+    currentChat.type=type; currentChat.name=name;
+    messagesDiv.innerHTML=`<div><b>${type==='private'?'Chat with':'Group'} ${name}</b></div>`;
+}
+
+function sendMessage(){
+    const msg = document.getElementById('message').value;
+    if(!msg || !currentChat.name) return;
+    if(currentChat.type==='private'){
+        socket.emit('private-message',{from:user.username,to:currentChat.name,message:msg});
+        messagesDiv.innerHTML+=`<div class="me"><b>You:</b> ${msg}</div>`;
+    } else {
+        socket.emit('group-message',{from:user.username,group:currentChat.name,message:msg,members:user.friends.concat(user.username)});
+        messagesDiv.innerHTML+=`<div class="me"><b>You:</b> ${msg}</div>`;
+    }
+    document.getElementById('message').value='';
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// --- Receive messages ---
+socket.on('private-message',data=>{
+    if(currentChat.type==='private' && data.from===currentChat.name){
+        messagesDiv.innerHTML+=`<div class="friend"><b>${data.from}:</b> ${data.message}</div>`;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+});
+
+socket.on('group-message',data=>{
+    if(currentChat.type==='group' && data.group===currentChat.name){
+        messagesDiv.innerHTML+=`<div class="friend"><b>${data.from}:</b> ${data.message}</div>`;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+});
+
+// --- Friend Requests ---
+function sendFriendRequest(){
+    const to = document.getElementById('addFriendUsername').value;
+    if(!to) return alert('Enter username');
+    socket.emit('send-friend-request',{from:user.username,to});
+    alert('Request sent!');
+}
+
+function acceptRequest(from){
+    fetch('/accept-friend',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({from,to:user.username})
+    }).then(res=>res.json()).then(data=>{
+        if(data.success){
+            user.friends.push(from);
+            user.friendRequests = user.friendRequests.filter(r=>r!==from);
+            renderFriends(); renderRequests();
+        }
+    });
+}
+
+// --- Receive new requests in real-time ---
+socket.on('new-friend-request', from=>{
+    user.friendRequests.push(from);
+    renderRequests();
+    alert('New friend request from: '+from);
+});
+
+// --- Groups ---
+function createGroup(){
+    const name = document.getElementById('groupName').value;
+    const members = document.getElementById('groupMembers').value.split(',').map(m=>m.trim());
+    if(!name || members.length===0) return alert('Enter group name and members');
+    fetch('/create-group',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({groupName:name,members,creator:user.username})
+    }).then(res=>res.json()).then(data=>{
+        if(data.success){
+            user.groups.push(name);
+            renderGroups();
+            alert('Group created');
+        }
+    });
+}
+</script>
+</body>
+</html>
