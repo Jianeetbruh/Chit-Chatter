@@ -1,133 +1,111 @@
-app.use(express.static(path.join(__dirname, 'public')));
+// server.js
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 
+// Create app and server
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// Middlewares
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // serve public folder
+app.use(express.urlencoded({ extended: true }));
 
-const USERS_FILE = './users.json';
+// File to store users
+const USERS_FILE = path.join(__dirname, 'users.json');
 
+// Helper functions
 function readUsers() {
-    if (!fs.existsSync(USERS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(USERS_FILE));
+  if (!fs.existsSync(USERS_FILE)) return [];
+  const data = fs.readFileSync(USERS_FILE, 'utf-8');
+  try {
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
 }
 
 function writeUsers(users) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-// --- Routes ---
-
+// Register route
 app.post('/register', (req, res) => {
-    const { username, password } = req.body;
-    let users = readUsers();
-    if (users.find(u => u.username === username)) return res.json({ success: false, message: 'Username exists' });
-    users.push({ username, password, friends: [], friendRequests: [], groups: [] });
-    writeUsers(users);
-    res.json({ success: true });
+  const { username, password } = req.body;
+  let users = readUsers();
+
+  if (users.find(u => u.username === username)) {
+    return res.send('❌ Username already exists!');
+  }
+
+  users.push({ username, password, friends: [], friendRequests: [] });
+  writeUsers(users);
+
+  res.redirect('/login.html');
 });
 
+// Login route
 app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    const users = readUsers();
-    const user = users.find(u => u.username === username && u.password === password);
-    if (!user) return res.json({ success: false, message: 'Invalid credentials' });
-    res.json({ success: true, user });
+  const { username, password } = req.body;
+  let users = readUsers();
+  const user = users.find(u => u.username === username && u.password === password);
+
+  if (user) {
+    res.redirect('/chat.html?user=' + username);
+  } else {
+    res.send('❌ Invalid username or password!');
+  }
 });
 
-app.post('/friend-request', (req, res) => {
-    const { from, to } = req.body;
-    let users = readUsers();
-    const receiver = users.find(u => u.username === to);
-    if (!receiver) return res.json({ success: false, message: 'User not found' });
-    if (!receiver.friendRequests.includes(from)) receiver.friendRequests.push(from);
-    writeUsers(users);
-    res.json({ success: true });
-});
-
-app.post('/accept-friend', (req, res) => {
-    const { from, to } = req.body;
-    let users = readUsers();
-    const user = users.find(u => u.username === to);
-    const sender = users.find(u => u.username === from);
-    if (!user || !sender) return res.json({ success: false });
-    if (!user.friends.includes(from)) user.friends.push(from);
-    if (!sender.friends.includes(to)) sender.friends.push(to);
-    user.friendRequests = user.friendRequests.filter(u => u !== from);
-    writeUsers(users);
-    res.json({ success: true });
-});
-
-app.post('/create-group', (req, res) => {
-    const { groupName, members, creator } = req.body;
-    let users = readUsers();
-    members.forEach(member => {
-        const u = users.find(us => us.username === member);
-        if (u && !u.groups.includes(groupName)) u.groups.push(groupName);
-    });
-    const creatorUser = users.find(u => u.username === creator);
-    if (creatorUser && !creatorUser.groups.includes(groupName)) creatorUser.groups.push(groupName);
-    writeUsers(users);
-    res.json({ success: true });
-});
-
-// --- Socket.IO ---
+// Keep track of online users
 let onlineUsers = {}; // username -> socket.id
 
 io.on('connection', (socket) => {
-    console.log('A user connected');
+  console.log('A user connected.');
 
-    // Track online users
-    socket.on('join', username => {
-        onlineUsers[username] = socket.id;
-    });
+  // When a user joins
+  socket.on('join', (username) => {
+    onlineUsers[username] = socket.id;
+    console.log(username, 'joined the chat');
+  });
 
-    // Private message
-    socket.on('private-message', ({ from, to, message }) => {
-        const targetSocket = onlineUsers[to];
-        if (targetSocket) io.to(targetSocket).emit('private-message', { from, message });
-    });
+  // Handle chat messages
+  socket.on('chat message', ({ from, to, message }) => {
+    const targetSocket = onlineUsers[to];
+    if (targetSocket) {
+      io.to(targetSocket).emit('chat message', { from, message });
+    }
+  });
 
-    // Group message
-    socket.on('group-message', ({ from, group, message, members }) => {
-        members.forEach(member => {
-            const targetSocket = onlineUsers[member];
-            if (targetSocket) io.to(targetSocket).emit('group-message', { from, group, message });
-        });
-    });
+  // Handle friend requests
+  socket.on('send-friend-request', ({ from, to }) => {
+    const users = readUsers();
+    const receiver = users.find(u => u.username === to);
 
-    // Real-time friend request
-    socket.on('send-friend-request', ({ from, to }) => {
-        const users = readUsers();
-        const receiver = users.find(u => u.username === to);
-        if (receiver && !receiver.friendRequests.includes(from)) {
-            receiver.friendRequests.push(from);
-            writeUsers(users);
+    if (receiver && !receiver.friendRequests.includes(from)) {
+      receiver.friendRequests.push(from);
+      writeUsers(users);
 
-            // Send real-time update if receiver is online
-            const targetSocket = onlineUsers[to];
-            if (targetSocket) io.to(targetSocket).emit('new-friend-request', from);
-        }
-    });
+      const targetSocket = onlineUsers[to];
+      if (targetSocket) io.to(targetSocket).emit('new-friend-request', from);
+    }
+  });
 
-    // Handle disconnect
-    socket.on('disconnect', () => {
-        for (let user in onlineUsers) {
-            if (onlineUsers[user] === socket.id) delete onlineUsers[user];
-        }
-        console.log('A user disconnected');
-    });
+  // Disconnect event
+  socket.on('disconnect', () => {
+    for (let user in onlineUsers) {
+      if (onlineUsers[user] === socket.id) delete onlineUsers[user];
+    }
+    console.log('A user disconnected.');
+  });
 });
 
-// --- Start server ---
-const PORT = 3000;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+// Start server (Render uses process.env.PORT)
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
