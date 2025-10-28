@@ -9,61 +9,59 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// ✅ Middleware
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
 
-const USERS_FILE = path.join(__dirname, "users.json");
+// ✅ Temporary in-memory users (replace with DB later)
+let users = [];
 
-// Make sure the user file exists
-if (!fs.existsSync(USERS_FILE)) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify([]));
-}
+// 📄 Serve main page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
 
-// REGISTER endpoint
+// 🧾 Register endpoint
 app.post("/register", (req, res) => {
   const { username, password } = req.body;
-  let users = JSON.parse(fs.readFileSync(USERS_FILE));
+  const userExists = users.find((u) => u.username === username);
 
-  if (users.find((u) => u.username === username)) {
-    return res.send(`
-      <script>alert("Username already exists! Try another."); window.location.href = "/register.html";</script>
-    `);
+  if (userExists) {
+    return res.status(400).json({ error: "Username already exists" });
   }
 
   users.push({ username, password });
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-
-  res.send(`
-    <script>alert("Registration successful! Please log in."); window.location.href = "/login.html";</script>
-  `);
+  console.log("User registered:", username);
+  res.json({ message: "Registration successful!" });
 });
 
-// LOGIN endpoint
+// 🔐 Login endpoint
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  const users = JSON.parse(fs.readFileSync(USERS_FILE));
-
   const user = users.find(
     (u) => u.username === username && u.password === password
   );
 
   if (!user) {
-    return res.send(`
-      <script>alert("Invalid username or password! Try again."); window.location.href = "/login.html";</script>
-    `);
+    return res.status(400).json({ error: "Invalid username or password" });
   }
 
-  // Login success → go to chat
-  res.redirect(`/chat.html?user=${encodeURIComponent(username)}`);
+  console.log("User logged in:", username);
+  res.json({ message: "Login successful!" });
 });
 
-// SOCKET.IO for chat
+// 💬 Chat page route
+app.get("/chat.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "chat.html"));
+});
+
+// ⚡ Socket.IO setup
 io.on("connection", (socket) => {
   console.log("A user connected");
 
   socket.on("chat message", (msg) => {
-    io.emit("chat message", msg);
+    io.emit("chat message", msg); // Broadcast message to all
   });
 
   socket.on("disconnect", () => {
@@ -71,7 +69,8 @@ io.on("connection", (socket) => {
   });
 });
 
+// 🚀 Start server
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+server.listen(PORT, "0.0.0.0", () =>
+  console.log(`✅ Server running on port ${PORT}`)
+);
