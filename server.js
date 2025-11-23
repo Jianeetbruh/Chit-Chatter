@@ -24,28 +24,36 @@ app.get("/", (req, res) => {
 app.post("/register", (req, res) => {
   const { username, password } = req.body;
 
+  if (!username || !password || username.trim() === "" || password.trim() === "") {
+    return res.status(400).json({ error: "Username and password cannot be empty!" });
+  }
+
   if (users.find(u => u.username === username)) {
     return res.status(400).json({ error: "Username already exists" });
   }
 
   users.push({ username, password });
-  console.log("Registered:", username);
-
   res.json({ message: "Registered successfully!" });
 });
+
 
 // Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
-  if (!users.find(u => u.username === username && u.password === password)) {
+  if (!username || !password || username.trim() === "" || password.trim() === "") {
+    return res.status(400).json({ error: "Username and password cannot be empty!" });
+  }
+
+  const user = users.find(u => u.username === username && u.password === password);
+
+  if (!user) {
     return res.status(400).json({ error: "Incorrect username or password" });
   }
 
-  console.log("Logged in:", username);
-
   res.json({ message: "Login successful" });
 });
+
 
 // Fix "Cannot GET chat.html"
 app.get("/chat.html", (req, res) => {
@@ -69,3 +77,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on port", PORT);
 });
+
