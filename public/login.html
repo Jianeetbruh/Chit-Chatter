@@ -21,10 +21,11 @@
         function login() {
             auth.signInWithEmailAndPassword(email.value, pass.value)
             .then(() => {
-                window.location.href = "/chatting.html";
+                window.location.href = "https://chit-chatter-qfnp.onrender.com/chatting.html";
             })
             .catch(err => alert(err.message));
         }
     </script>
 </body>
 </html>
+
