@@ -1,50 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Register</title>
 </head>
 <body>
-    <h2>Register</h2>
 
-    <input id="email" placeholder="Email"><br>
-    <input id="pass" placeholder="Password" type="password"><br>
-    <input id="username" placeholder="Username"><br>
+<h2>Register</h2>
 
-    <button onclick="register()">Register</button>
+<input id="email" type="text" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+<input id="username" type="text" placeholder="Username"><br><br>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-    <script src="script.js"></script>
+<button onclick="registerUser()">Register</button>
 
-    <script>
-        function register() {
-            let email = email.value;
-            let pass = pass.value;
-            let uname = username.value;
+<p id="msg" style="color:red;"></p>
 
-            auth.createUserWithEmailAndPassword(email, pass)
-            .then(async (userCred) => {
-                let uid = userCred.user.uid;
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="script.js"></script>
 
-                await db.collection("users").doc(uid).set({
-                    username: uname,
-                    email: email,
-                    profilePic: "",
-                    status: "Hey there! I am using Textchat",
-                    friends: [],
-                    friendRequests: [],
-                    groups: []
-                });
+<script>
+async function registerUser() {
+    const email = document.getElementById("email").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    const uname = document.getElementById("username").value.trim();
+    const msg = document.getElementById("msg");
 
-                alert("Registered!");
-                window.location.href = "chatting.html";
-            })
-            .catch(err => alert(err.message));
-        }
-    </script>
+    if (!email || !pass || !uname) {
+        msg.innerText = "All fields required!";
+        return;
+    }
+
+    try {
+        await auth.createUserWithEmailAndPassword(email, pass);
+
+        const uid = auth.currentUser.uid;
+
+        await db.collection("users").doc(uid).set({
+            username: uname,
+            email: email,
+            profilePic: "",
+            status: "Sup! I am using Textchat",
+            friends: [],
+            friendRequests: [],
+            groups: []
+        });
+
+        msg.style.color = "green";
+        msg.innerText = "Registration successful! Redirecting...";
+
+        // FIXED — Correct redirect
+        window.location.href = "login.html";
+
+    } catch (e) {
+        msg.innerText = e.message;
+    }
+}
+</script>
+
 </body>
 </html>
-
-
