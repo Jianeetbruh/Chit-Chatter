@@ -44,7 +44,8 @@ app.post("/login", (req, res) => {
 app.get("/chatting.html", (req, res) => {
   res.sendFile(__dirname + "/public/chatting.html");
 });
-
+res.redirect('/chatting.html');
 // Start server
 app.listen(3000, () => console.log("Server running on port 3000"));
+
 
