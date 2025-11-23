@@ -1,72 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Register</title>
-    <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-    <div class="container">
-        <h1>Register</h1>
+    <h2>Register</h2>
 
-        <form id="registerForm">
-            <input type="text" id="username" placeholder="Enter username" required>
-            <input type="password" id="password" placeholder="Enter password" required>
+    <input id="email" placeholder="Email"><br>
+    <input id="pass" placeholder="Password" type="password"><br>
+    <input id="username" placeholder="Username"><br>
 
-            <button type="submit" class="btn">Register</button>
-        </form>
+    <button onclick="register()">Register</button>
 
-        <p class="switch">Already have an account?
-            <a href="login.html">Login</a>
-        </p>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    <script src="script.js"></script>
 
-        <p id="message" class="msg"></p>
-    </div>
+    <script>
+        function register() {
+            let email = email.value;
+            let pass = pass.value;
+            let uname = username.value;
 
-<script>
-document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+            auth.createUserWithEmailAndPassword(email, pass)
+            .then(async (userCred) => {
+                let uid = userCred.user.uid;
 
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const msg = document.getElementById("message");
+                await db.collection("users").doc(uid).set({
+                    username: uname,
+                    email: email,
+                    profilePic: "",
+                    status: "Hey there! I am using Textchat",
+                    friends: [],
+                    friendRequests: [],
+                    groups: []
+                });
 
-    if (!username || !password) {
-        msg.textContent = "Please fill all fields.";
-        msg.style.color = "red";
-        return;
-    }
-
-    try {
-        const response = await fetch("/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            msg.textContent = "Registered successfully! Redirecting...";
-            msg.style.color = "green";
-            
-            setTimeout(() => {
-                window.location.href = "/chatting.html"; // FIXED
-            }, 800);
-        } else {
-            msg.textContent = result.message;
-            msg.style.color = "red";
+                alert("Registered!");
+                window.location.href = "/chatting.html";
+            })
+            .catch(err => alert(err.message));
         }
-
-    } catch (error) {
-        msg.textContent = "Something went wrong!";
-        msg.style.color = "red";
-    }
-});
-</script>
-
+    </script>
 </body>
 </html>
-
