@@ -1,41 +1,43 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Chat Room</title>
-    <script src="/socket.io/socket.io.js"></script>
-  </head>
-  <body>
-    <h2>Welcome to Chit-Chatter!</h2>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" placeholder="Type a message..." />
-      <button>Send</button>
-    </form>
+<head>
+  <title>Chit-Chatter Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 
-    <script>
-      const socket = io();
+<body>
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const user = urlParams.get("user") || "Anonymous";
+<div class="chat-container">
+  <div id="messages"></div>
 
-      const form = document.getElementById("form");
-      const input = document.getElementById("input");
-      const messages = document.getElementById("messages");
+  <div class="input-area">
+    <input id="msgInput" type="text" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
 
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        if (input.value) {
-          socket.emit("chat message", `${user}: ${input.value}`);
-          input.value = "";
-        }
-      });
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-      socket.on("chat message", (msg) => {
-        const li = document.createElement("li");
-        li.textContent = msg;
-        messages.appendChild(li);
-        messages.scrollTop = messages.scrollHeight;
-      });
-    </script>
-  </body>
+<script>
+const socket = io();
+const messagesDiv = document.getElementById("messages");
+
+socket.on("chat message", (msg) => {
+  let bubble = document.createElement("div");
+  bubble.classList.add("message");
+  bubble.innerText = msg;
+  messagesDiv.appendChild(bubble);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+});
+
+function sendMessage() {
+  let msg = document.getElementById("msgInput").value;
+  if (msg.trim() === "") return;
+
+  socket.emit("chat message", msg);
+  document.getElementById("msgInput").value = "";
+}
+</script>
+
+</body>
 </html>
