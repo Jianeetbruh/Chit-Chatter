@@ -41,9 +41,10 @@ app.post("/login", (req, res) => {
 });
 
 // Safe route for chat.html
-app.get("/chat.html", (req, res) => {
-  res.sendFile(__dirname + "/public/chat.html");
+app.get("/chatting.html", (req, res) => {
+  res.sendFile(__dirname + "/public/chatting.html");
 });
 
 // Start server
 app.listen(3000, () => console.log("Server running on port 3000"));
+
