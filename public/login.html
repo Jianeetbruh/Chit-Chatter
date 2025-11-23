@@ -28,12 +28,13 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   if (res.ok) {
     alert("Login successful!");
     // 👇 Redirect to chat.html after successful login
-    window.location.href = "chatting.html";
+    window.location.href = "/chatting.html";
   } else {
     alert(data.error || "Login failed. Please try again.");
   }
 });
   </script>
 </html>
+
 
 
