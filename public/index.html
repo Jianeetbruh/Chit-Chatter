@@ -21,43 +21,63 @@
       <p id="msg"></p>
     </div>
   </div>
+<script>
+function showError(msg) {
+  document.getElementById("msg").innerText = msg;
+  setTimeout(() => {
+    document.getElementById("msg").innerText = "";
+  }, 3000);
+}
 
-  <script>
-    async function register() {
-      let username = document.getElementById("username").value;
-      let password = document.getElementById("password").value;
+async function register() {
+  let username = document.getElementById("username").value.trim();
+  let password = document.getElementById("password").value.trim();
 
-      let res = await fetch("/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
+  if (username === "" || password === "") {
+    return showError("Username & Password cannot be empty!");
+  }
 
-      let data = await res.json();
-      document.getElementById("msg").innerText = data.message || data.error;
+  let res = await fetch("/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
 
-      if (res.ok) {
-        window.location.href = "/chat.html";
-      }
-    }
+  let data = await res.json();
+  
+  if (!res.ok) {
+    showError(data.error);
+    return;
+  }
 
-    async function login() {
-      let username = document.getElementById("username").value;
-      let password = document.getElementById("password").value;
+  window.location.href = "/chat.html";
+}
 
-      let res = await fetch("/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
+async function login() {
+  let username = document.getElementById("username").value.trim();
+  let password = document.getElementById("password").value.trim();
 
-      let data = await res.json();
-      document.getElementById("msg").innerText = data.message || data.error;
+  if (username === "" || password === "") {
+    return showError("Username & Password cannot be empty!");
+  }
 
-      if (res.ok) {
-        window.location.href = "/chat.html";
-      }
-    }
-  </script>
+  let res = await fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  let data = await res.json();
+
+  if (!res.ok) {
+    showError(data.error);
+    return;
+  }
+
+  window.location.href = "/chat.html";
+}
+</script>
+
 </body>
 </html>
+
