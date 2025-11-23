@@ -1,24 +1,11 @@
 const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const path = require("path");
-
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
-
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Serve public folder
-app.use(express.static(path.join(__dirname, "public")));
+// VERY IMPORTANT — serve static files
+app.use(express.static("public"));
 
 let users = [];
-
-// Default page → new homepage
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
 
 // Register
 app.post("/register", (req, res) => {
@@ -35,7 +22,6 @@ app.post("/register", (req, res) => {
   users.push({ username, password });
   res.json({ message: "Registered successfully!" });
 });
-
 
 // Login
 app.post("/login", (req, res) => {
@@ -54,27 +40,10 @@ app.post("/login", (req, res) => {
   res.json({ message: "Login successful" });
 });
 
-
-// Fix "Cannot GET chat.html"
+// Safe route for chat.html
 app.get("/chat.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "chat.html"));
+  res.sendFile(__dirname + "/public/chat.html");
 });
 
-// Socket.io
-io.on("connection", (socket) => {
-  console.log("User connected");
-
-  socket.on("chat message", (msg) => {
-    io.emit("chat message", msg);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, "0.0.0.0", () => {
-  console.log("Server running on port", PORT);
-});
-
+// Start server
+app.listen(3000, () => console.log("Server running on port 3000"));
