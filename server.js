@@ -1,15 +1,18 @@
+// server.js
 const express = require("express");
 const path = require("path");
+
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// VERY IMPORTANT — serve static files
-app.use(express.static("public"));
+// Serve static files (VERY IMPORTANT)
+app.use(express.static(path.join(__dirname, "public")));
 
-let users = [];
+let users = []; // temporary in-memory storage
 
-// Register
+// -------------------- REGISTER --------------------
 app.post("/register", (req, res) => {
   const { username, password } = req.body;
 
@@ -17,15 +20,19 @@ app.post("/register", (req, res) => {
     return res.status(400).json({ error: "Username and password cannot be empty!" });
   }
 
-  if (users.find(u => u.username === username)) {
+  if (users.find((u) => u.username === username)) {
     return res.status(400).json({ error: "Username already exists" });
   }
 
   users.push({ username, password });
+
+  console.log("New user registered:", username);
+
+  // Send success (frontend will redirect)
   res.json({ message: "Registered successfully!" });
 });
 
-// Login
+// -------------------- LOGIN --------------------
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
@@ -34,21 +41,26 @@ app.post("/login", (req, res) => {
   }
 
   const user = users.find(
-    u => u.username === username && u.password === password
+    (u) => u.username === username && u.password === password
   );
 
   if (!user) {
     return res.status(400).json({ error: "Incorrect username or password" });
   }
 
+  console.log("User logged in:", username);
+
+  // Return success (frontend will redirect)
   res.json({ message: "Login successful" });
 });
 
-// SERVE chatting.html
-app.get("chatting.html", (req, res) => {
+// -------------------- SERVE chatting.html --------------------
+app.get("/chatting.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "chatting.html"));
 });
 
-// Start server
-app.listen(3000, () => console.log("Server running on port 3000"));
-
+// -------------------- START SERVER --------------------
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
