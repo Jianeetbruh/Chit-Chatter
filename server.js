@@ -1,5 +1,7 @@
 const express = require("express");
+const path = require("path");
 const app = express();
+
 app.use(express.json());
 
 // VERY IMPORTANT — serve static files
@@ -31,7 +33,9 @@ app.post("/login", (req, res) => {
     return res.status(400).json({ error: "Username and password cannot be empty!" });
   }
 
-  const user = users.find(u => u.username === username && u.password === password);
+  const user = users.find(
+    u => u.username === username && u.password === password
+  );
 
   if (!user) {
     return res.status(400).json({ error: "Incorrect username or password" });
@@ -40,13 +44,10 @@ app.post("/login", (req, res) => {
   res.json({ message: "Login successful" });
 });
 
-app.get('/chatting.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'chatting.html'));
+// SERVE chatting.html
+app.get("/chatting.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "chatting.html"));
 });
 
-res.redirect('chatting.html');
 // Start server
 app.listen(3000, () => console.log("Server running on port 3000"));
-
-
-
