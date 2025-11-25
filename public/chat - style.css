@@ -1,0 +1,106 @@
+/* chat-style.css - Neon WhatsApp-inspired */
+
+:root{
+  --bg:#05060b;
+  --panel:#071026;
+  --muted: #93a0b8;
+  --neon1: #00f5ff;
+  --neon2: #7f5cff;
+  --accent: linear-gradient(90deg,var(--neon1),var(--neon2));
+  --glass: rgba(255,255,255,0.03);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background: radial-gradient(800px 500px at 10% 10%, rgba(127,92,255,0.08), transparent 10%),
+              radial-gradient(600px 400px at 90% 80%, rgba(0,245,255,0.05), transparent 10%),
+              var(--bg);
+  color:#e6eef6;
+  font-family: Inter, Poppins, Arial, sans-serif;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* layout */
+.app{
+  width:95%;
+  max-width:1200px;
+  height:92vh;
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  gap:18px;
+}
+
+/* sidebar */
+.sidebar{
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:14px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+}
+
+.sidebar-top{display:flex;justify-content:space-between;align-items:center}
+.me{display:flex;gap:10px;align-items:center}
+.me img{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.06)}
+.me #myName{font-weight:700}
+.me .muted{font-size:12px;color:var(--muted)}
+
+/* tabs */
+.tabs{display:flex;gap:8px;margin-top:12px}
+.tabs button{flex:1;padding:8px;border-radius:10px;border:none;background:transparent;color:var(--muted);cursor:pointer}
+.tabs button.active{background:var(--glass);color:#fff;box-shadow:0 6px 20px rgba(127,92,255,0.08)}
+
+/* lists */
+.list{margin-top:12px;overflow:auto;flex:1;padding-right:6px}
+.item{display:flex;gap:12px;align-items:center;padding:8px;border-radius:10px;cursor:pointer}
+.item:hover{background:rgba(255,255,255,0.02)}
+.avatar{width:44px;height:44px;border-radius:50%;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.item .title{font-weight:700}
+.item .sub{font-size:12px;color:var(--muted)}
+
+/* bottom fab */
+.sidebar-bottom{display:flex;justify-content:center;padding-top:10px}
+.fab{width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:#040;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;box-shadow:0 10px 40px rgba(127,92,255,0.12)}
+
+/* chat panel */
+.chat{
+  background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.01));
+  border-radius:14px;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
+.chat-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.chat-top-left{display:flex;gap:12px;align-items:center}
+.chat-top-left img{width:48px;height:48px;border-radius:50%}
+.chat-top-left .muted{font-size:13px;color:var(--muted)}
+
+.messages{flex:1;padding:18px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+
+/* message rows */
+.msg-row{display:flex}
+.msg-row.you{justify-content:flex-end}
+.msg{padding:10px 14px;border-radius:18px;max-width:72%;line-height:1.3;word-wrap:break-word;box-shadow:0 6px 24px rgba(0,0,0,0.6)}
+.msg.you{background:linear-gradient(90deg,var(--neon1),var(--neon2));color:#001018;box-shadow:0 8px 30px rgba(127,92,255,0.12)}
+.msg.other{background:rgba(255,255,255,0.03);color:#e6eef6}
+
+/* composer */
+.composer{display:flex;gap:10px;padding:12px;border-top:1px solid rgba(255,255,255,0.02);background:linear-gradient(0deg, rgba(255,255,255,0.01), transparent)}
+.composer input{flex:1;padding:12px;border-radius:12px;border:none;background:rgba(255,255,255,0.02);color:#fff}
+.composer button{padding:10px 16px;border-radius:12px;border:none;background:var(--accent);color:#012;margin-left:6px;cursor:pointer}
+
+/* modal */
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45)}
+.modal.hidden{display:none}
+.modal-card{background:#081026;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);min-width:280px}
+
+/* small */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr;height:100vh;padding:12px}
+  .sidebar{order:2;height:260px}
+  .chat{order:1;height:calc(100vh - 280px)}
+}
