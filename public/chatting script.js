@@ -1,12 +1,12 @@
 // chat-script.js
 // ---------- Firebase config (replace with your values) ----------
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MSG_ID",
-  appId: "YOUR_APP_ID"
+   apiKey: "AIzaSyCpKNQfhu63kU-7FeyzyCFe8W8m6FpwuDI",
+  authDomain: "chitchatter-a9e46.firebaseapp.com",
+  projectId: "chitchatter-a9e46",
+  storageBucket: "chitchatter-a9e46.firebasestorage.app",
+  messagingSenderId: "628142532846",
+  appId: "1:628142532846:web:da3ae09a1c33fe3d5babff"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
