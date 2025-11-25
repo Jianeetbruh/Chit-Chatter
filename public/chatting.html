@@ -1,43 +1,103 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Chit-Chatter Chat</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Chit-Chatter — Neon</title>
+  <link rel="stylesheet" href="chat-style.css"/>
 </head>
-
 <body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="me" id="meProfile">
+          <img id="myAvatar" src="/placeholder-avatar.png" alt="me"/>
+          <div>
+            <div id="myName">You</div>
+            <div id="myDesc" class="muted">Edit your status</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="btnRequests" title="Friend Requests">🔔</button>
+          <button id="btnSettings" title="Profile">⚙️</button>
+        </div>
+      </div>
 
-<div class="chat-container">
-  <div id="messages"></div>
+      <div class="tabs">
+        <button id="tabFriends" class="active">Friends</button>
+        <button id="tabGroups">Groups</button>
+      </div>
 
-  <div class="input-area">
-    <input id="msgInput" type="text" placeholder="Type a message...">
-    <button onclick="sendMessage()">Send</button>
+      <div class="list" id="requestsList">
+        <!-- Friend requests will appear here -->
+      </div>
+
+      <div class="list" id="mainList">
+        <!-- Friends or groups -->
+      </div>
+
+      <div class="sidebar-bottom">
+        <button id="btnAdd" class="fab">＋</button>
+      </div>
+    </aside>
+
+    <!-- Chat area -->
+    <main class="chat">
+      <header class="chat-header">
+        <div class="chat-top-left">
+          <img id="chatWithAvatar" src="/placeholder-avatar.png" alt="avatar"/>
+          <div>
+            <div id="chatWithName">Select a friend or group</div>
+            <div id="chatWithDesc" class="muted">Status or group info</div>
+          </div>
+        </div>
+        <div class="chat-top-right">
+          <button id="btnLeave">Leave</button>
+        </div>
+      </header>
+
+      <section id="messages" class="messages"></section>
+
+      <div class="composer">
+        <input id="messageInput" placeholder="Type a message..." autocomplete="off"/>
+        <button id="sendBtn">Send</button>
+      </div>
+    </main>
   </div>
-</div>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- Profile / requests modal (hidden by default) -->
+  <div id="profileModal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Profile</h3>
+      <input id="editName" placeholder="Display name"/>
+      <input id="editDesc" placeholder="Short description"/>
+      <input id="editAvatarUrl" placeholder="Avatar image URL"/>
+      <div class="modal-actions">
+        <button id="saveProfile">Save</button>
+        <button id="closeProfile">Close</button>
+      </div>
+    </div>
+  </div>
 
-<script>
-const socket = io();
-const messagesDiv = document.getElementById("messages");
+  <div id="addModal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Add Friend / Create Group</h3>
+      <input id="addInput" placeholder="Friend email or Group name"/>
+      <div class="modal-actions">
+        <button id="addFriendBtn">Send Friend Request</button>
+        <button id="createGroupBtn">Create Group</button>
+        <button id="closeAdd">Close</button>
+      </div>
+    </div>
+  </div>
 
-socket.on("chat message", (msg) => {
-  let bubble = document.createElement("div");
-  bubble.classList.add("message");
-  bubble.innerText = msg;
-  messagesDiv.appendChild(bubble);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-});
+  <!-- Firebase + App script -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-function sendMessage() {
-  let msg = document.getElementById("msgInput").value;
-  if (msg.trim() === "") return;
-
-  socket.emit("chat message", msg);
-  document.getElementById("msgInput").value = "";
-}
-</script>
-
+  <script src="chat-script.js"></script>
 </body>
 </html>
