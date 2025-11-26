@@ -20,31 +20,31 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="script.js"></script>
-
 <script>
 async function loginUser() {
-    const email = document.getElementById("email").value.trim();
-    const pass = document.getElementById("password").value.trim();
-    const msg = document.getElementById("msg");
+  const email = document.getElementById("email").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const msg = document.getElementById("msg");
 
-    if (!email || !pass) {
-        msg.innerText = "Both fields are required!";
-        return;
-    }
+  if (!email || !pass) {
+    msg.innerText = "Both fields required";
+    return;
+  }
 
-    try {
-        await auth.signInWithEmailAndPassword(email, pass);
-        msg.style.color = "green";
-        msg.innerText = "Login successful! Redirecting...";
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
 
-        // Redirect to chat page
-        window.location.href = "chatting.html";
+    msg.style.color = "green";
+    msg.innerText = "Login successful...";
+    window.location.href = "chatting.html";
 
-    } catch (e) {
-        msg.innerText = e.message;
-    }
+  } catch (err) {
+    msg.style.color = "red";
+    msg.innerText = err.message;
+  }
 }
 </script>
 
 </body>
 </html>
+
