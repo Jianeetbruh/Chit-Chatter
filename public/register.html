@@ -24,42 +24,39 @@
 
 <script>
 async function registerUser() {
-    const email = document.getElementById("email").value.trim();
-    const pass = document.getElementById("password").value.trim();
-    const uname = document.getElementById("username").value.trim();
-    const msg = document.getElementById("msg");
+  const email = document.getElementById("email").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const uname = document.getElementById("username").value.trim();
+  const msg = document.getElementById("msg");
 
-    if (!email || !pass || !uname) {
-        msg.innerText = "All fields required!";
-        return;
-    }
+  if (!email || !pass || !uname) {
+    msg.innerText = "All fields required";
+    return;
+  }
 
-    try {
-        await auth.createUserWithEmailAndPassword(email, pass);
+  try {
+    const user = await auth.createUserWithEmailAndPassword(email, pass);
 
-        const uid = auth.currentUser.uid;
+    await db.collection("users").doc(user.user.uid).set({
+      username: uname,
+      email: email,
+      description: "",
+      avatarURL: "",
+      friends: [],
+      online: true
+    });
 
-        await db.collection("users").doc(uid).set({
-            username: uname,
-            email: email,
-            profilePic: "",
-            status: "Sup! I am using Textchat",
-            friends: [],
-            friendRequests: [],
-            groups: []
-        });
+    msg.style.color = "green";
+    msg.innerText = "Registered! Redirecting...";
+    window.location.href = "login.html";
 
-        msg.style.color = "green";
-        msg.innerText = "Registration successful! Redirecting...";
-
-        // FIXED — Correct redirect
-        window.location.href = "login.html";
-
-    } catch (e) {
-        msg.innerText = e.message;
-    }
+  } catch (err) {
+    msg.innerText = err.message;
+  }
 }
 </script>
 
+
 </body>
 </html>
+
