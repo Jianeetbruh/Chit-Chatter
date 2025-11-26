@@ -97,9 +97,23 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
 <script src="script.js"></script>  <!-- very important -->
+  <script>
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+        console.log("User is NULL → redirecting");
+        window.location.href = "login.html";
+        return;
+    }
+
+    console.log("User logged in:", user.email);
+
+    // continue loading the chat UI...
+});
+  </script>
 
 </body>
 </html>
+
 
 
 
