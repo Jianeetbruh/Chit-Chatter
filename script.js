@@ -17,3 +17,15 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Auto-join socket after login
+let socket;
+
+auth.onAuthStateChanged(user => {
+    if (!user) return;
+
+    socket = io();
+    socket.emit("join", user.email);
+
+    console.log("🔵 Joined socket as:", user.email);
+});
